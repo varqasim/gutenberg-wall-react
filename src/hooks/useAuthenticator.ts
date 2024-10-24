@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import {
   confirmSignUp,
   fetchAuthSession,
+  fetchUserAttributes,
   getCurrentUser,
   signIn,
   signUp,
@@ -9,6 +10,7 @@ import {
 import { shallow } from "zustand/shallow";
 
 import { User, useUserStore } from "@/store";
+import { createUserProfile } from "@/actions/user";
 
 interface LoginParams {
   email: string;
@@ -54,8 +56,6 @@ export default function useAuthentication() {
   
       await getAuthenticatedUser();
   
-      console.log({ isSignUpComplete, nextStep, userId })
-  
       return { isSignUpComplete };
     } catch (error) {
       console.error(error);
@@ -70,7 +70,16 @@ export default function useAuthentication() {
         password: params.password,
       });
 
-      await getAuthenticatedUser();
+      console.log({ isSignedIn });
+
+      if (isSignedIn) {
+        const user = await getAuthenticatedUser();
+        console.log({ user })
+        if (user) {
+          // TODO: Can be improved to set a custom flow for cognito to call the backend API
+          await createUserProfile(user.id, user.name, user.email);
+        }
+      }
 
       return { isSignedIn };
     } catch (error) {
@@ -82,18 +91,22 @@ export default function useAuthentication() {
   const getAuthenticatedUser = async () => {
     try {
       const currentUser = await getCurrentUser();
+      console.log('getAuthenticatedUser', { currentUser })
       if (currentUser) {
         const { tokens } = await fetchAuthSession();
-        const userAttributes = { name: "hello", email: "hello" };
+        console.log({ tokens })
+        const userAttributes = await fetchUserAttributes();
         const authUser = {
+          id: currentUser.userId,
           name: userAttributes.name!,
           email: userAttributes.email!,
           authToken: tokens?.accessToken.toString()!,
         };
         setUser(authUser);
+        return authUser;
       }
 
-      return user;
+      return;
     } catch (error: any) {
       if (error?.name === "UserUnAuthenticatedException") {
         setUser(undefined);
