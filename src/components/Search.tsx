@@ -1,8 +1,8 @@
 "use client"
  
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { z } from "zod";
 
 // import useSearch from "@/hooks/useSearch";
 import { Input } from "./ui/input";
@@ -14,9 +14,6 @@ const formSchema = z.object({
 });
 
 export default function SearchComponent() {
-
-  // const { setSearchTerm } = useSearch();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -24,7 +21,7 @@ export default function SearchComponent() {
     }
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log({ values })
   }
 
