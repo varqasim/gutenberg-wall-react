@@ -1,48 +1,85 @@
-"use client"
- 
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+"use client";
 
-// import useSearch from "@/hooks/useSearch";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Form, FormControl, FormField, FormItem } from "./ui/form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Progress } from "@/components/ui/progress";
+import useSearch from "@/hooks/useSearch";
+import { useEffect, useState } from "react";
+import { Book } from "./Book";
 
 const formSchema = z.object({
-  bookId: z.string().min(2).max(1000)
+  bookId: z.string().min(2).max(1000),
 });
 
 export default function SearchComponent() {
+  const [bookId, setBookId] = useState<string | undefined>(undefined);
+  const { isFetching, book } = useSearch({ bookId });
+  const [bookContent, setBookContent] = useState<string | undefined>(undefined);
+  const [progressValue, setProgressValue] = useState(0);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      bookId: ""
-    }
+      bookId: "",
+    },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log({ values })
+    setBookId(values.bookId)
   }
 
+  useEffect(() => {
+    if (isFetching) {
+      const timer = setTimeout(() => setProgressValue(66), 500)
+      return () => clearTimeout(timer)
+    }
+  }, [isFetching]);
+
+  async function loadBookContent(url: string) {
+    setBookContent(url)
+  }
+
+
+  useEffect(() => {
+    if (!!book) {
+      loadBookContent(book.url);
+    }
+  }, [book])
+
   return (
-    <div className="flex w-full max-w-sm items-center justify-items-center space-x-2">
+    <div className="flex w-full flex-col items-center justify-items-center space-y-5">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-row items-center justify-between space-x-3"
+        >
           <FormField
             control={form.control}
             name="bookId"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input type="text" placeholder="Gutenberg Book ID" {...field} />
+                  <Input
+                    type="text"
+                    placeholder="Gutenberg Book ID"
+                    {...field}
+                  />
                 </FormControl>
               </FormItem>
             )}
           />
+          <Button type="submit">Go!</Button>
         </form>
-        <Button type="submit">Go!</Button>
       </Form>
+        { isFetching && <Progress value={progressValue} /> }
+        <div className="space-y-10">
+          { (!isFetching && !!book) && <Book bookDetails={book} content={bookContent} /> }
+        </div>
     </div>
   );
 }

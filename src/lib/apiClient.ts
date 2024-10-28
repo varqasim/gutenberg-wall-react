@@ -1,5 +1,10 @@
 import { fetchAuthSession } from 'aws-amplify/auth';
 import axios, { AxiosError } from 'axios';
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from '@tanstack/react-query'
 
 const createAxios = (baseURL: any) => {
   const newInstance = axios.create({
@@ -40,6 +45,14 @@ const createAxios = (baseURL: any) => {
   return newInstance;
 };
 
-const client = createAxios(process.env.REACT_APP_API_URL);
+export const axiosClient = createAxios(process.env.REACT_APP_API_URL);
 
-export default client;
+const CACHE_PERSIST_TIME = 24 * 60 * 60 * 1000 * 3;
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      staleTime: CACHE_PERSIST_TIME,
+    },
+  },
+});

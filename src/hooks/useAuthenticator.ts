@@ -7,10 +7,9 @@ import {
   signIn,
   signUp,
 } from "aws-amplify/auth";
-import { shallow } from "zustand/shallow";
 
 import { User, useUserStore } from "@/store";
-import { createUserProfile } from "@/actions/user";
+import { createUserProfile } from "@/actions/users";
 
 interface LoginParams {
   email: string;
@@ -29,7 +28,6 @@ interface VerifyParams {
 }
 
 export default function useAuthentication() {
-  const user = useUserStore(state => state.user);
   const setUser = useUserStore(state => state.setUser);
 
   const registerUser = async (params: RegisterParams) => {
@@ -70,11 +68,8 @@ export default function useAuthentication() {
         password: params.password,
       });
 
-      console.log({ isSignedIn });
-
       if (isSignedIn) {
         const user = await getAuthenticatedUser();
-        console.log({ user })
         if (user) {
           // TODO: Can be improved to set a custom flow for cognito to call the backend API
           await createUserProfile(user.id, user.name, user.email);
@@ -91,10 +86,8 @@ export default function useAuthentication() {
   const getAuthenticatedUser = async () => {
     try {
       const currentUser = await getCurrentUser();
-      console.log('getAuthenticatedUser', { currentUser })
       if (currentUser) {
         const { tokens } = await fetchAuthSession();
-        console.log({ tokens })
         const userAttributes = await fetchUserAttributes();
         const authUser = {
           id: currentUser.userId,
@@ -108,10 +101,12 @@ export default function useAuthentication() {
 
       return;
     } catch (error: any) {
+      setUser(undefined);
+
       if (error?.name === "UserUnAuthenticatedException") {
-        setUser(undefined);
+        return;
       }
-      
+
       console.error(error);
     }
   };
