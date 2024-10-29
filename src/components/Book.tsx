@@ -1,5 +1,7 @@
 import type { Book } from "@/actions/books";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
 
 interface BookProps {
   bookDetails: Book;
@@ -7,6 +9,7 @@ interface BookProps {
 }
 
 export function Book({ bookDetails, content }: BookProps) {
+  console.log(content)
   return (
     <div>
       <Card>
@@ -15,7 +18,9 @@ export function Book({ bookDetails, content }: BookProps) {
             <CardDescription>{bookDetails.author} - {bookDetails.publishedOn}</CardDescription>
           </CardHeader>
           <CardContent>
-            {content}
+            <ScrollArea className="h-72 w-100 rounded-md border p-4">
+              <p style={{ whiteSpace: 'pre-wrap' }}>{content}</p>
+            </ScrollArea>
           </CardContent>
         </Card>
     </div>

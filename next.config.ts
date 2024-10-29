@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: [
-          { key: "Access-Control-Allow-Origin", value: "http://localhost:4566/:path*" }
+          { key: "Access-Control-Allow-Origin", value: "http://localhost:4566/:path*" },
+          { key: "Access-Control-Allow-Origin", value: "https://bouki.s3.us-east-1.amazonaws.com/:path*" }
         ]
       }
     ]

@@ -11,6 +11,8 @@ import { Progress } from "@/components/ui/progress";
 import useSearch from "@/hooks/useSearch";
 import { useEffect, useState } from "react";
 import { Book } from "./Book";
+import { useQuery } from "@tanstack/react-query";
+import { s3AxiosClient } from "@/lib/apiClient";
 
 const formSchema = z.object({
   bookId: z.string().min(2).max(1000),
@@ -22,6 +24,19 @@ export default function SearchComponent() {
   const [bookContent, setBookContent] = useState<string | undefined>(undefined);
   const [progressValue, setProgressValue] = useState(0);
 
+  useQuery({
+    queryKey: [`/books/${book?.id}/content`],
+    queryFn: async () => {
+      const { data } = await s3AxiosClient.get(book?.url!, {
+        headers: {
+          Accept: "*/*"
+        },
+      });
+      setBookContent(data);
+    },
+    enabled: !!book,
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -30,26 +45,20 @@ export default function SearchComponent() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setBookId(values.bookId)
+    setBookId(values.bookId);
   }
 
   useEffect(() => {
     if (isFetching) {
-      const timer = setTimeout(() => setProgressValue(66), 500)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setProgressValue(66), 500);
+      return () => clearTimeout(timer);
     }
   }, [isFetching]);
 
-  async function loadBookContent(url: string) {
-    setBookContent(url)
-  }
-
-
   useEffect(() => {
     if (!!book) {
-      loadBookContent(book.url);
     }
-  }, [book])
+  }, [book]);
 
   return (
     <div className="flex w-full flex-col items-center justify-items-center space-y-5">
@@ -76,10 +85,12 @@ export default function SearchComponent() {
           <Button type="submit">Go!</Button>
         </form>
       </Form>
-        { isFetching && <Progress value={progressValue} /> }
-        <div className="space-y-10">
-          { (!isFetching && !!book) && <Book bookDetails={book} content={bookContent} /> }
-        </div>
+      {isFetching && <Progress value={progressValue} />}
+      <div className="space-y-10">
+        {!isFetching && !!book && (
+          <Book bookDetails={book} content={bookContent} />
+        )}
+      </div>
     </div>
   );
 }

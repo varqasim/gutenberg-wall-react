@@ -1,16 +1,12 @@
-import { fetchAuthSession } from 'aws-amplify/auth';
-import axios, { AxiosError } from 'axios';
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from '@tanstack/react-query'
+import { fetchAuthSession } from "aws-amplify/auth";
+import axios, { AxiosError } from "axios";
+import { QueryClient } from "@tanstack/react-query";
 
 const createAxios = (baseURL: any) => {
   const newInstance = axios.create({
     baseURL: baseURL,
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json",
     },
   });
 
@@ -19,14 +15,14 @@ const createAxios = (baseURL: any) => {
       try {
         const { tokens } = await fetchAuthSession();
         if (options.headers) {
-          options.headers['Authorization'] = `Bearer ${tokens?.accessToken}`;
+          options.headers["Authorization"] = `Bearer ${tokens?.accessToken}`;
         }
 
         return options;
       } catch {
         return {
           ...options,
-          cancelToken: new axios.CancelToken((cancel) => cancel())
+          cancelToken: new axios.CancelToken((cancel) => cancel()),
         };
       }
     },
@@ -46,6 +42,7 @@ const createAxios = (baseURL: any) => {
 };
 
 export const axiosClient = createAxios(process.env.REACT_APP_API_URL);
+export const s3AxiosClient = axios.create();
 
 const CACHE_PERSIST_TIME = 24 * 60 * 60 * 1000 * 3;
 export const queryClient = new QueryClient({
